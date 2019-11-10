@@ -1,3 +1,3 @@
-export default (responseObject, statusCode, res) => res.status(statusCode).json({
-  status: statusCode < 300 ? 'success' : 'failure', ...responseObject
+export default ({ data, status, res }) => res.status(status).json({
+  status: status < 300 ? 'success' : 'failure', ...data
 });

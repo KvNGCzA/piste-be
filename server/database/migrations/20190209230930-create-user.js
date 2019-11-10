@@ -19,6 +19,10 @@ export default {
       allowNull: false,
       type: Sequelize.STRING,
     },
+    country: {
+      allowNull: false,
+      type: Sequelize.STRING,
+    },
     password: {
       allowNull: false,
       type: Sequelize.STRING,

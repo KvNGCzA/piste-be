@@ -31,4 +31,28 @@ export default class AuthController {
       next(error);
     }
   }
+
+  static async login(req, res, next) {
+    try {
+      const { email, password } = req.body;
+      // find user
+      const user = await User.findOne({ where: { email } });
+      // confirm password
+      const confirmUser = user ? await bcrypt.compare(password, user.password) : false;
+      if (!confirmUser) {
+        return responseMessage({
+          data: { message: 'email/password do not match' },
+          status: 400,
+          res
+        });
+      }
+      return responseMessage({
+        data: { message: 'login successful', token: createToken(user.id) },
+        status: 200,
+        res
+      })
+    } catch (error) {
+      next(error);
+    }
+  }
 }

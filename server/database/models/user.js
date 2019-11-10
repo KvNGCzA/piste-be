@@ -19,6 +19,10 @@ export default (sequelize, DataTypes) => {
       allowNull: false,
       type: DataTypes.STRING,
     },
+    country: {
+      allowNull: false,
+      type: DataTypes.STRING,
+    },
     password: {
       allowNull: false,
       type: DataTypes.STRING,

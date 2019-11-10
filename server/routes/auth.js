@@ -1,14 +1,14 @@
 import express from 'express';
 import middlewares from '../middlewares';
-import UserControllers from '../controllers/UserController';
+import AuthController from '../controllers/AuthController';
 
 const user = express.Router();
 // const { TokenUtils } = middlewares;
 // const { verifyToken } = TokenUtils;
-// const { updatePass } = UserControllers;
+const { signup } = AuthController;
 
-const base = '/user';
+const base = '/auth';
 
-user.get(`${base}/myaccount`);
+user.post(`${base}/signup`, signup);
 
 export default user;

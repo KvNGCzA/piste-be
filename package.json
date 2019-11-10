@@ -6,8 +6,37 @@
   "repository": "git@github.com:KvNGCzA/piste-be.git",
   "author": "KvNGCzA <akanmuoluwadamilare@yahoo.com>",
   "license": "MIT",
+  "scripts": {
+    "start": "babel-node server",
+    "start:dev": "nodemon --exec babel-node server",
+    "test": "cross-env NODE_ENV=test yarn run db:rollback && cross-env NODE_ENV=test nyc mocha tests/**/** --require babel-register --exit",
+    "cover": "./node_modules/.bin/babel-node node_modules/.bin/istanbul cover node_modules/.bin/_mocha -- ./tests/**/**.test.js --exit",
+    "coveralls": "yarn run cover -- --report lcovonly && cat ./coverage/lcov.info | coveralls",
+    "build": "babel . --ignore node_modules,coverage,dist -d dist/",
+    "db:rollback": "yarn run db:back && yarn run db:roll && yarn run db:seed",
+    "db:roll": "sequelize db:migrate",
+    "db:back": "sequelize db:migrate:undo:all",
+    "db:seed": "sequelize db:seed:all"
+  },
   "dependencies": {
+    "babel-register": "^6.26.0",
+    "bcrypt": "^3.0.6",
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
     "express": "^4.17.1",
-    "morgan": "^1.9.1"
+    "express-validator": "^6.2.0",
+    "jsonwebtoken": "^8.5.1",
+    "morgan": "^1.9.1",
+    "pg": "^7.12.1",
+    "pg-hstore": "^2.3.3",
+    "sequelize": "^5.21.2",
+    "sequelize-cli": "^5.5.1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-preset-env": "^1.7.0",
+    "cross-env": "^6.0.3"
   }
 }

@@ -29,6 +29,10 @@ export default (sequelize, DataTypes) => {
     }
   }, {});
   Investment.associate = (models) => {
+    Investment.belongsToMany(models.User, {
+      through: models.UserInvestment,
+      foreignKey: 'investmentId'
+    });
   };
   return Investment;
 };

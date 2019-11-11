@@ -6,7 +6,7 @@ const { responseMessage } = helpers;
 export default async (req, res, next) => {
   const { investmentId } = req.params;
   try {
-    const investment = await model.UserInvestment.findOne({ where: { investmentId }});
+    const investment = await model.UserInvestment.findOne({ where: { investmentId } });
     if (!investment || req.userData.id !== investment.userId) {
       return responseMessage({
         data: {

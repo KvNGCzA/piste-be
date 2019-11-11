@@ -1,6 +1,5 @@
 import helpers from '../helpers';
 import models from '../database/models';
-import Sequelize from 'sequelize';
 
 const { responseMessage } = helpers;
 const { User, UserInvestment, Investment } = models;
@@ -11,7 +10,9 @@ export default class UserController {
   static async calculateInvestmentOverview(req) {
     const user = await User.findByPk(req.userData.id);
     const investments = await user.getInvestments({
-      attributes: ['id', 'name', 'amountInvested', 'expectedReturnPercentage', 'returnDate', 'status'],
+      attributes: [
+        'id', 'name', 'amountInvested', 'expectedReturnPercentage', 'returnDate', 'status'
+      ],
     });
     let totalAmountInvested = 0;
     let investmentOnProjectedReturns = 0;
@@ -23,7 +24,7 @@ export default class UserController {
     let numberOfMaturedInvestments = 0;
     investments.map((investment) => {
       totalAmountInvested += investment.amountInvested;
-      const roi = investment.amountInvested * (investment.expectedReturnPercentage/100);
+      const roi = investment.amountInvested * (investment.expectedReturnPercentage / 100);
       totalROI += roi;
       if (investment.status === 'active') {
         projectedReturns += roi;
@@ -35,10 +36,11 @@ export default class UserController {
         investmentOnMatureReturns += investment.amountInvested;
         numberOfMaturedInvestments += 1;
       }
+      return null;
     });
-    const totalPercentageReturn = (100/totalAmountInvested) * totalROI;
-    const projectedPercentageReturn = (100/investmentOnProjectedReturns) * projectedReturns;
-    const maturePercentageReturn = (100/investmentOnMatureReturns) * maturedReturns;
+    const totalPercentageReturn = (100 / totalAmountInvested) * totalROI;
+    const projectedPercentageReturn = (100 / investmentOnProjectedReturns) * projectedReturns;
+    const maturePercentageReturn = (100 / investmentOnMatureReturns) * maturedReturns;
     const networth = totalAmountInvested + maturedReturns;
     return {
       networth,
@@ -80,13 +82,17 @@ export default class UserController {
       const limit = req.query.limit || 10;
       const offset = (+page - 1) * +limit;
       const investments = await user.getInvestments({
-        attributes: ['id', 'name', 'amountInvested', 'expectedReturnPercentage', 'returnDate', 'status'],
+        attributes: [
+          'id', 'name', 'amountInvested', 'expectedReturnPercentage', 'returnDate', 'status'
+        ],
         limit,
         offset
       });
       const result = { overview, meta: { page: +page, investmentsOnPage: investments.length } };
       if (!investments.length) {
-        return responseMessage({ data: { ...result, message: 'no additional investments to load' }, status: 400, res })
+        return responseMessage({
+          data: { ...result, message: 'no additional investments to load' }, status: 400, res
+        });
       }
       return responseMessage({ data: { ...result, investments }, status: 200, res });
     } catch (error) {
@@ -98,13 +104,15 @@ export default class UserController {
     const { investmentId } = req.params;
     try {
       const investment = await Investment.findByPk(investmentId, {
-        attributes: ['id', 'name', 'amountInvested', 'expectedReturnPercentage', 'returnDate', 'status'],
+        attributes: [
+          'id', 'name', 'amountInvested', 'expectedReturnPercentage', 'returnDate', 'status'
+        ],
         raw: true
       });
-      const totalReturnOnInvestment = investment.amountInvested * (investment.expectedReturnPercentage/100);
+      const totalReturnOnInvestment = investment.amountInvested * (investment.expectedReturnPercentage / 100);
       return responseMessage({
         data: {
-          investment: {...investment, totalReturnOnInvestment }
+          investment: { ...investment, totalReturnOnInvestment }
         },
         status: 200,
         res
@@ -117,11 +125,13 @@ export default class UserController {
   static async addInvestment(req, res, next) {
     try {
       const user = await User.findByPk(req.userData.id);
-      const { roi: { type, value }, amountInvested, returnDate, name } = req.body;
+      const {
+        roi: { type, value }, amountInvested, returnDate, name
+      } = req.body;
       const expectedReturnPercentage = type === 'percentage'
-        ? value : value/(amountInvested/100);
+        ? value : value / (amountInvested / 100);
       const totalReturnOnInvestment = type !== 'percentage'
-        ? value : (value/100) * amountInvested;
+        ? value : (value / 100) * amountInvested;
       const investment = await Investment.create({
         ...req.body,
         expectedReturnPercentage,
@@ -154,9 +164,9 @@ export default class UserController {
     try {
       const { roi: { type, value }, amountInvested } = req.body;
       const expectedReturnPercentage = type === 'percentage'
-        ? value : value/(amountInvested/100);
+        ? value : value / (amountInvested / 100);
       const totalReturnOnInvestment = type !== 'percentage'
-        ? value : (value/100) * amountInvested;
+        ? value : (value / 100) * amountInvested;
       const [rowsUpdated, investment] = await Investment.update({
         ...req.body,
         expectedReturnPercentage

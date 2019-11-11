@@ -50,7 +50,7 @@ export default class AuthController {
         data: { message: 'login successful', token: createToken(user.id) },
         status: 200,
         res
-      })
+      });
     } catch (error) {
       next(error);
     }

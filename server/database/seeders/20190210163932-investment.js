@@ -31,6 +31,14 @@ export default {
     returnDate: '22-12-2019',
     createdAt: new Date(),
     updatedAt: new Date(),
+  }, {
+    id: '153a1b86-8b78-4cb8-b28f-8e4f7811c456',
+    name: 'Afri Invest Mutual Fund',
+    amountInvested: 1200000,
+    expectedReturn: 25,
+    returnDate: '22-12-2019',
+    createdAt: new Date(),
+    updatedAt: new Date(),
   }], {}),
 
   down: queryInterface => queryInterface.bulkDelete('Investments', null, {})

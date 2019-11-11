@@ -17,6 +17,13 @@ export default (sequelize, DataTypes) => {
     },
   }, {});
   UserInvestment.associate = (models) => {
+    UserInvestment.belongsTo(models.User, {
+      foreignKey: 'userId'
+    })
+
+    UserInvestment.belongsTo(models.Investment, {
+      foreignKey: 'investmentId'
+    })
   };
   return UserInvestment;
 };

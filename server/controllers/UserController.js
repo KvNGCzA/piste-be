@@ -20,10 +20,13 @@ export default class UserController {
   static async getAnInvestment(req, res, next) {
     const { investmentId } = req.params;
     try {
-      const investment = await UserInvestment.findOne({ where: { investmentId }});
+      let investment = await UserInvestment.findOne({ where: { investmentId }});
       if (!investment || req.userData.id !== investment.userId) {
         return responseMessage({ data: { message: 'this investment does not exist or does not belong to you' }, status: 400, res });
       }
+      investment = await investment.getInvestment({
+        attributes: ['id', 'name', 'amountInvested', 'expectedReturn', 'returnDate']
+      });
       return responseMessage({ data: { investment }, status: 200, res });
     } catch (error) {
       next(error);

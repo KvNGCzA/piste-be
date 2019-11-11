@@ -23,10 +23,6 @@ export default (sequelize, DataTypes) => {
       allowNull: false,
       type: DataTypes.STRING,
     },
-    password: {
-      allowNull: false,
-      type: DataTypes.STRING,
-    }
   }, {});
   Investment.associate = (models) => {
     Investment.belongsToMany(models.User, {

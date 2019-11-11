@@ -7,7 +7,11 @@ export default class TokenUtils {
   static async verifyToken(req, res, next) {
     const token = req.headers.authorization || req.query.token;
     if (!token) {
-      return responseMessage({ message: 'please provide a token' }, 401, res);
+      return responseMessage({
+        data: { message: 'please provide a token' },
+        status: 401,
+        res
+      });
     }
     const decoded = jwt.verify(
       token,
@@ -18,12 +22,26 @@ export default class TokenUtils {
       }
     );
     if (!decoded.message) {
-      const { id } = decoded;
-      return responseMessage({ message: 'account not found' }, 404, res);
+      req.userData = decoded;
+      return next();
     }
     if (decoded.message === 'jwt expired') {
-      return responseMessage({ status: 'unauthorized', message: 'token expired' }, 401, res);
+      return responseMessage({
+        data: {
+          status: 'unauthorized',
+          message: 'token expired'
+        },
+        status: 401,
+        res
+      });
     }
-    return responseMessage({ status: 'unauthorized', message: 'invalid token' }, 401, res);
+    return responseMessage({
+      data: {
+        status: 'unauthorized',
+        message: 'invalid token'
+      },
+      status: 401,
+      res
+    });
   }
 }

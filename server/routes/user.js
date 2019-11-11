@@ -3,12 +3,12 @@ import middlewares from '../middlewares';
 import UserControllers from '../controllers/UserController';
 
 const user = express.Router();
-// const { TokenUtils } = middlewares;
-// const { verifyToken } = TokenUtils;
-// const { updatePass } = UserControllers;
+const { TokenUtils } = middlewares;
+const { verifyToken } = TokenUtils;
+const { fetchAllUserInvestments } = UserControllers;
 
 const base = '/user';
 
-user.get(`${base}/myaccount`);
+user.get(`${base}/myinvestments`, verifyToken, fetchAllUserInvestments);
 
 export default user;

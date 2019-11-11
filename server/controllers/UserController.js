@@ -13,14 +13,14 @@ export default class UserController {
     const investments = await user.getInvestments({
       attributes: ['id', 'name', 'amountInvested', 'expectedReturnPercentage', 'returnDate'],
     });
-    let totalInvestment = 0, totalReturnOnInvestment = 0;
+    let totalAmountInvested = 0, totalReturnOnInvestment = 0;
     investments.map((investment) => {
-      totalInvestment += investment.amountInvested ;
+      totalAmountInvested += investment.amountInvested ;
       totalReturnOnInvestment += investment.amountInvested * (investment.expectedReturnPercentage/100)
     });
-    const percentageReturn = (100/totalInvestment) * totalReturnOnInvestment;
-    const networth = totalInvestment + totalReturnOnInvestment;
-    return { numberOfInvestments: investments.length, totalInvestment, totalReturnOnInvestment, percentageReturn, networth };
+    const projectedPercentageReturn = (100/totalAmountInvested) * totalReturnOnInvestment;
+    const networth = totalAmountInvested + totalReturnOnInvestment;
+    return { numberOfInvestments: investments.length, totalAmountInvested, totalReturnOnInvestment, projectedPercentageReturn, networth };
   }
 
   static async myInvestmentOverview(req, res, next) {

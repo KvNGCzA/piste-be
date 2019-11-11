@@ -3,9 +3,9 @@ export default (sequelize, DataTypes) => {
   const UserInvestment = sequelize.define('UserInvestment', {
     id: {
       allowNull: false,
-      defaultValue: DataTypes.UUIDV4,
+      autoIncrement: true,
       primaryKey: true,
-      type: DataTypes.UUID
+      type: DataTypes.INTEGER
     },
     userId: {
       allowNull: false,

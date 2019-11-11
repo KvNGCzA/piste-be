@@ -5,9 +5,16 @@ import UserControllers from '../controllers/UserController';
 const user = express.Router();
 const { TokenUtils } = middlewares;
 const { verifyToken } = TokenUtils;
-const { fetchAllUserInvestments, getAnInvestment, myInvestmentOverview } = UserControllers;
+const {
+  fetchAllUserInvestments,
+  getAnInvestment,
+  myInvestmentOverview,
+  addInvestment
+} = UserControllers;
 
 const base = '/user';
+
+user.post(`${base}/newinvestment`, verifyToken, addInvestment);
 
 user.get(`${base}/myinvestments`, verifyToken, fetchAllUserInvestments);
 

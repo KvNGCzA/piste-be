@@ -3,7 +3,7 @@ import models from '../database/models';
 import Sequelize from 'sequelize';
 
 const { responseMessage } = helpers;
-const { User, UserInvestment } = models;
+const { User, UserInvestment, Investment } = models;
 
 // [Sequelize.fn('sum', Sequelize.col('amountInvested')), 'total']
 
@@ -102,11 +102,45 @@ export default class UserController {
         return responseMessage({ data: { message: 'this investment does not exist or does not belong to you' }, status: 400, res });
       }
       investment = await investment.getInvestment({
-        attributes: ['id', 'name', 'amountInvested', 'expectedReturnPercentage', 'returnDate'],
+        attributes: ['id', 'name', 'amountInvested', 'expectedReturnPercentage', 'returnDate', 'status'],
         raw: true
       });
       const totalReturnOnInvestment = investment.amountInvested * (investment.expectedReturnPercentage/100);
-      return responseMessage({ data: { ...investment, totalReturnOnInvestment }, status: 200, res });
+      return responseMessage({ data: { investment: {...investment, totalReturnOnInvestment} }, status: 200, res });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async addInvestment(req, res, next) {
+    try {
+      const user = await User.findByPk(req.userData.id);
+      const { roi: { type, value }, amountInvested, returnDate, name } = req.body;
+      const expectedReturnPercentage = type === 'percentage'
+        ? value : value/(amountInvested/100);
+      const totalReturnOnInvestment = type !== 'percentage'
+        ? value : (value/100) * amountInvested;
+      const investment = await Investment.create({
+        ...req.body,
+        expectedReturnPercentage,
+        status: 'active'
+      });
+      await user.addInvestment(investment)
+      return responseMessage({
+        data: {
+          investment: {
+            id: investment.id,
+            name,
+            amountInvested,
+            expectedReturnPercentage,
+            returnDate,
+            status: 'active',
+            totalReturnOnInvestment
+          }
+        },
+        res,
+        status: 200
+      });
     } catch (error) {
       next(error);
     }

@@ -3,7 +3,7 @@ import models from '../database/models';
 import Sequelize from 'sequelize';
 
 const { responseMessage } = helpers;
-const { User, UserInvestment } = models;
+const { User, UserInvestment, Investment } = models;
 
 // [Sequelize.fn('sum', Sequelize.col('amountInvested')), 'total']
 
@@ -97,16 +97,88 @@ export default class UserController {
   static async getAnInvestment(req, res, next) {
     const { investmentId } = req.params;
     try {
-      let investment = await UserInvestment.findOne({ where: { investmentId }});
-      if (!investment || req.userData.id !== investment.userId) {
-        return responseMessage({ data: { message: 'this investment does not exist or does not belong to you' }, status: 400, res });
-      }
-      investment = await investment.getInvestment({
-        attributes: ['id', 'name', 'amountInvested', 'expectedReturnPercentage', 'returnDate'],
+      const investment = await Investment.findByPk(investmentId, {
+        attributes: ['id', 'name', 'amountInvested', 'expectedReturnPercentage', 'returnDate', 'status'],
         raw: true
       });
       const totalReturnOnInvestment = investment.amountInvested * (investment.expectedReturnPercentage/100);
-      return responseMessage({ data: { ...investment, totalReturnOnInvestment }, status: 200, res });
+      return responseMessage({
+        data: {
+          investment: {...investment, totalReturnOnInvestment }
+        },
+        status: 200,
+        res
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async addInvestment(req, res, next) {
+    try {
+      const user = await User.findByPk(req.userData.id);
+      const { roi: { type, value }, amountInvested, returnDate, name } = req.body;
+      const expectedReturnPercentage = type === 'percentage'
+        ? value : value/(amountInvested/100);
+      const totalReturnOnInvestment = type !== 'percentage'
+        ? value : (value/100) * amountInvested;
+      const investment = await Investment.create({
+        ...req.body,
+        expectedReturnPercentage,
+        status: 'active'
+      });
+      await user.addInvestment(investment);
+      const overview = await UserController.calculateInvestmentOverview(req);
+      return responseMessage({
+        data: {
+          overview,
+          investment: {
+            id: investment.id,
+            name,
+            amountInvested,
+            expectedReturnPercentage,
+            returnDate,
+            status: 'active',
+            totalReturnOnInvestment
+          }
+        },
+        res,
+        status: 201
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async updateInvestment(req, res, next) {
+    try {
+      const { roi: { type, value }, amountInvested } = req.body;
+      const expectedReturnPercentage = type === 'percentage'
+        ? value : value/(amountInvested/100);
+      const totalReturnOnInvestment = type !== 'percentage'
+        ? value : (value/100) * amountInvested;
+      const [rowsUpdated, investment] = await Investment.update({
+        ...req.body,
+        expectedReturnPercentage
+      }, {
+        where: { id: req.params.investmentId },
+        returning: true,
+        plain: true,
+        raw: true,
+      });
+      const overview = await UserController.calculateInvestmentOverview(req);
+      const editedInvestment = { ...investment };
+      delete editedInvestment.updatedAt;
+      delete editedInvestment.createdAt;
+      return responseMessage({
+        data: {
+          message: 'record updated successfully',
+          overview,
+          investment: { ...editedInvestment, totalReturnOnInvestment }
+        },
+        res,
+        status: 200
+      });
     } catch (error) {
       next(error);
     }

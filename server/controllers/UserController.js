@@ -11,16 +11,56 @@ export default class UserController {
   static async calculateInvestmentOverview(req) {
     const user = await User.findByPk(req.userData.id);
     const investments = await user.getInvestments({
-      attributes: ['id', 'name', 'amountInvested', 'expectedReturnPercentage', 'returnDate'],
+      attributes: ['id', 'name', 'amountInvested', 'expectedReturnPercentage', 'returnDate', 'status'],
     });
-    let totalAmountInvested = 0, totalReturnOnInvestment = 0;
+    let totalAmountInvested = 0;
+    let investmentOnProjectedReturns = 0;
+    let investmentOnMatureReturns = 0;
+    let totalROI = 0;
+    let projectedReturns = 0;
+    let maturedReturns = 0;
+    let numberOfProjectedInvestments = 0;
+    let numberOfMaturedInvestments = 0;
     investments.map((investment) => {
-      totalAmountInvested += investment.amountInvested ;
-      totalReturnOnInvestment += investment.amountInvested * (investment.expectedReturnPercentage/100)
+      totalAmountInvested += investment.amountInvested;
+      const roi = investment.amountInvested * (investment.expectedReturnPercentage/100);
+      totalROI += roi;
+      if (investment.status === 'active') {
+        projectedReturns += roi;
+        investmentOnProjectedReturns += investment.amountInvested;
+        numberOfProjectedInvestments += 1;
+      }
+      if (investment.status === 'mature') {
+        maturedReturns += roi;
+        investmentOnMatureReturns += investment.amountInvested;
+        numberOfMaturedInvestments += 1;
+      }
     });
-    const projectedPercentageReturn = (100/totalAmountInvested) * totalReturnOnInvestment;
-    const networth = totalAmountInvested + totalReturnOnInvestment;
-    return { numberOfInvestments: investments.length, totalAmountInvested, totalReturnOnInvestment, projectedPercentageReturn, networth };
+    const totalPercentageReturn = (100/totalAmountInvested) * totalROI;
+    const projectedPercentageReturn = (100/investmentOnProjectedReturns) * projectedReturns;
+    const maturePercentageReturn = (100/investmentOnMatureReturns) * maturedReturns;
+    const networth = totalAmountInvested + maturedReturns;
+    return {
+      networth,
+      total: {
+        principle: totalAmountInvested,
+        roi: totalROI,
+        precentageROI: totalPercentageReturn,
+        numberOfInvestments: investments.length
+      },
+      projected: {
+        principle: investmentOnProjectedReturns,
+        roi: projectedReturns,
+        precentageROI: projectedPercentageReturn,
+        numberOfInvestments: numberOfProjectedInvestments
+      },
+      mature: {
+        principle: investmentOnMatureReturns,
+        roi: maturedReturns,
+        precentageROI: maturePercentageReturn,
+        numberOfInvestments: numberOfMaturedInvestments
+      }
+    };
   }
 
   static async myInvestmentOverview(req, res, next) {
@@ -40,7 +80,7 @@ export default class UserController {
       const limit = req.query.limit || 10;
       const offset = (+page - 1) * +limit;
       const investments = await user.getInvestments({
-        attributes: ['id', 'name', 'amountInvested', 'expectedReturnPercentage', 'returnDate'],
+        attributes: ['id', 'name', 'amountInvested', 'expectedReturnPercentage', 'returnDate', 'status'],
         limit,
         offset
       });

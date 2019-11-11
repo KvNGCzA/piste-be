@@ -1,25 +1,25 @@
 /* eslint-disable */
 export default (sequelize, DataTypes) => {
-  const User = sequelize.define('User', {
+  const Investment = sequelize.define('Investment', {
     id: {
       allowNull: false,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
       type: DataTypes.UUID
     },
-    firstName: {
+    name: {
       allowNull: false,
       type: DataTypes.STRING,
     },
-    lastName: {
+    amountInvested: {
       allowNull: false,
-      type: DataTypes.STRING,
+      type: DataTypes.INTEGER,
     },
-    email: {
+    expectedReturn: {
       allowNull: false,
-      type: DataTypes.STRING,
+      type: DataTypes.INTEGER,
     },
-    country: {
+    returnDate: {
       allowNull: false,
       type: DataTypes.STRING,
     },
@@ -28,11 +28,11 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.STRING,
     }
   }, {});
-  User.associate = (models) => {
-    User.belongsToMany(models.Investment, {
+  Investment.associate = (models) => {
+    Investment.belongsToMany(models.User, {
       through: models.UserInvestment,
-      foreignKey: 'userId'
+      foreignKey: 'investmentId'
     });
   };
-  return User;
+  return Investment;
 };

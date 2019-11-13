@@ -31,7 +31,8 @@ export default (sequelize, DataTypes) => {
   User.associate = (models) => {
     User.belongsToMany(models.Investment, {
       through: models.UserInvestment,
-      foreignKey: 'userId'
+      foreignKey: 'userId',
+      onDelete: 'cascade'
     });
   };
   return User;

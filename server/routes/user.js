@@ -10,7 +10,8 @@ const {
   getAnInvestment,
   myInvestmentOverview,
   addInvestment,
-  updateInvestment
+  updateInvestment,
+  deleteInvestment
 } = UserControllers;
 
 const base = '/user';
@@ -18,6 +19,8 @@ const base = '/user';
 user.post(`${base}/investment`, verifyToken, addInvestment);
 
 user.put(`${base}/investment/:investmentId`, verifyToken, VerifyOwnership, updateInvestment);
+
+user.delete(`${base}/investment/:investmentId`, verifyToken, VerifyOwnership, deleteInvestment);
 
 user.get(`${base}/myinvestments`, verifyToken, fetchAllUserInvestments);
 

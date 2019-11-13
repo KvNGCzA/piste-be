@@ -22,7 +22,8 @@ export default (sequelize, DataTypes) => {
     })
 
     UserInvestment.belongsTo(models.Investment, {
-      foreignKey: 'investmentId'
+      foreignKey: 'investmentId',
+      onDelete: 'cascade'
     })
   };
   return UserInvestment;

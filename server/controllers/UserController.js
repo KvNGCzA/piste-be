@@ -4,8 +4,6 @@ import models from '../database/models';
 const { responseMessage } = helpers;
 const { User, UserInvestment, Investment } = models;
 
-// [Sequelize.fn('sum', Sequelize.col('amountInvested')), 'total']
-
 export default class UserController {
   static async calculateInvestmentOverview(req) {
     const user = await User.findByPk(req.userData.id);
@@ -43,23 +41,27 @@ export default class UserController {
     const maturePercentageReturn = (100 / investmentOnMatureReturns) * maturedReturns;
     const networth = totalAmountInvested + maturedReturns;
     return {
-      networth,
-      total: {
-        principle: totalAmountInvested,
-        roi: totalROI,
-        precentageROI: totalPercentageReturn,
-        numberOfInvestments: investments.length
+      networth: {
+        totalAmountInvested,
+        maturedReturns,
+        total: networth
       },
       projected: {
+        principle: totalAmountInvested,
+        roi: totalROI,
+        percentageROI: totalPercentageReturn,
+        numberOfInvestments: investments.length
+      },
+      active: {
         principle: investmentOnProjectedReturns,
         roi: projectedReturns,
-        precentageROI: projectedPercentageReturn,
+        percentageROI: projectedPercentageReturn,
         numberOfInvestments: numberOfProjectedInvestments
       },
       mature: {
         principle: investmentOnMatureReturns,
         roi: maturedReturns,
-        precentageROI: maturePercentageReturn,
+        percentageROI: maturePercentageReturn,
         numberOfInvestments: numberOfMaturedInvestments
       }
     };
@@ -101,9 +103,9 @@ export default class UserController {
   }
 
   static async getAnInvestment(req, res, next) {
-    const { investmentId } = req.params;
+    const { userInvestment } = req;
     try {
-      const investment = await Investment.findByPk(investmentId, {
+      const investment = await userInvestment.getInvestment({
         attributes: [
           'id', 'name', 'amountInvested', 'expectedReturnPercentage', 'returnDate', 'status'
         ],
@@ -185,6 +187,24 @@ export default class UserController {
           message: 'record updated successfully',
           overview,
           investment: { ...editedInvestment, totalReturnOnInvestment }
+        },
+        res,
+        status: 200
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async deleteInvestment(req, res, next) {
+    try {
+      const { userInvestment } = req;
+      const investment = await userInvestment.getInvestment();
+      await userInvestment.destroy();
+      await investment.destroy();
+      return responseMessage({
+        data: {
+          message: `investment "${investment.name}" deleted successfully`
         },
         res,
         status: 200

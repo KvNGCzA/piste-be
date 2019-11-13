@@ -16,6 +16,7 @@ export default async (req, res, next) => {
         res
       });
     }
+    req.userInvestment = investment;
     next();
   } catch (error) {
     next(error);

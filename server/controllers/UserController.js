@@ -1,7 +1,7 @@
 import helpers from '../helpers';
 import models from '../database/models';
 
-const { responseMessage } = helpers;
+const { responseMessage, splitInvestments } = helpers;
 const { User, UserInvestment, Investment } = models;
 
 export default class UserController {
@@ -10,7 +10,7 @@ export default class UserController {
     const investments = await user.getInvestments({
       attributes: [
         'id', 'name', 'amountInvested', 'expectedReturnPercentage', 'returnDate', 'status'
-      ],
+      ]
     });
     let totalAmountInvested = 0;
     let investmentOnProjectedReturns = 0;
@@ -83,19 +83,26 @@ export default class UserController {
       const page = req.query.page || 1;
       const limit = req.query.limit || 10;
       const offset = (+page - 1) * +limit;
-      const investments = await user.getInvestments({
+      let investments = await user.getInvestments({
         attributes: [
           'id', 'name', 'amountInvested', 'expectedReturnPercentage', 'returnDate', 'status'
         ],
         limit,
         offset
       });
-      const result = { overview, meta: { page: +page, investmentsOnPage: investments.length } };
+      const result = {
+        overview,
+        meta: {
+          page: +page,
+          investmentsOnPage: investments.length
+        }
+      };
       if (!investments.length) {
         return responseMessage({
           data: { ...result, message: 'no additional investments to load' }, status: 400, res
         });
       }
+      investments = splitInvestments([...investments]);
       return responseMessage({ data: { ...result, investments }, status: 200, res });
     } catch (error) {
       next(error);

@@ -83,13 +83,15 @@ export default class UserController {
       const page = req.query.page || 1;
       const limit = req.query.limit || 10;
       const offset = (+page - 1) * +limit;
-      let investments = await user.getInvestments({
+      const query = {
         attributes: [
           'id', 'name', 'amountInvested', 'expectedReturnPercentage', 'returnDate', 'status'
         ],
         limit,
         offset
-      });
+      };
+      if (req.query.status) query.where = { status: req.query.status };
+      let investments = await user.getInvestments(query);
       const result = {
         overview,
         meta: {

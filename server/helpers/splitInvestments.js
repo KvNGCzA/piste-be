@@ -11,5 +11,11 @@ const filterAndDelete = ({ investments, status }) => {
 export default (investments) => {
   const active = filterAndDelete({ investments, status: 'active' });
   const mature = filterAndDelete({ investments, status: 'mature' });
-  return { active, mature };
+  let result = {};
+  if (active.length) result.active = active;
+  if (mature.length) result.mature = mature;
+  if (!mature.length || !active.length) {
+    result = result[mature.length ? 'mature' : 'active'];
+  }
+  return result;
 };

@@ -1,6 +1,8 @@
 import bcrypt from 'bcrypt';
+import { Op } from 'sequelize';
 import helpers from '../helpers';
 import models from '../database/models';
+import UserController from './UserController';
 
 const { responseMessage, createToken } = helpers;
 const { User } = models;
@@ -9,7 +11,9 @@ export default class AuthController {
   static async signup(req, res, next) {
     try {
       // validate user existence
-      const existingUser = await User.findOne({ where: { email: req.body.email } });
+      const existingUser = await User.findOne({
+        where: { email: { [Op.iLike]: `%${req.body.email}%` } }
+      });
       if (existingUser) {
         return responseMessage({
           data: { message: 'a user with this email already exists' },
@@ -18,12 +22,13 @@ export default class AuthController {
         });
       }
       // create user
-      const { id } = await User.create({
+      const user = await User.create({
         ...req.body,
         password: bcrypt.hashSync(req.body.password, 10)
       });
+      delete user.password;
       return responseMessage({
-        data: { message: 'done', token: createToken(id) },
+        data: { message: 'done', user, token: createToken(user.id) },
         status: 200,
         res
       });
@@ -36,7 +41,7 @@ export default class AuthController {
     try {
       const { email, password } = req.body;
       // find user
-      const user = await User.findOne({ where: { email } });
+      const user = await User.findOne({ where: { email: { [Op.iLike]: `%${email}%` } } });
       // confirm password
       const confirmUser = user ? await bcrypt.compare(password, user.password) : false;
       if (!confirmUser) {
@@ -46,8 +51,17 @@ export default class AuthController {
           res
         });
       }
+      delete user.dataValues.password;
+      const overview = await UserController.calculateInvestmentOverview({
+        userData: { id: user.id }
+      });
       return responseMessage({
-        data: { message: 'login successful', token: createToken(user.id) },
+        data: {
+          message: 'login successful',
+          user,
+          overview,
+          token: createToken(user.id)
+        },
         status: 200,
         res
       });

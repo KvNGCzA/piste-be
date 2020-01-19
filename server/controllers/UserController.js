@@ -49,19 +49,19 @@ export default class UserController {
       projected: {
         principle: totalAmountInvested,
         roi: totalROI,
-        percentageROI: totalPercentageReturn,
+        percentageROI: totalPercentageReturn || 0,
         numberOfInvestments: investments.length
       },
       active: {
         principle: investmentOnProjectedReturns,
         roi: projectedReturns,
-        percentageROI: projectedPercentageReturn,
+        percentageROI: projectedPercentageReturn || 0,
         numberOfInvestments: numberOfProjectedInvestments
       },
       mature: {
         principle: investmentOnMatureReturns,
         roi: maturedReturns,
-        percentageROI: maturePercentageReturn,
+        percentageROI: maturePercentageReturn || 0,
         numberOfInvestments: numberOfMaturedInvestments
       }
     };
@@ -88,7 +88,8 @@ export default class UserController {
           'id', 'name', 'amountInvested', 'expectedReturnPercentage', 'returnDate', 'status'
         ],
         limit,
-        offset
+        offset,
+        order: [['returnDate', 'desc']]
       };
       if (req.query.status) query.where = { status: req.query.status };
       let investments = await user.getInvestments(query);
@@ -176,8 +177,7 @@ export default class UserController {
       const { roi: { type, value }, amountInvested } = req.body;
       const expectedReturnPercentage = type === 'percentage'
         ? value : value / (amountInvested / 100);
-      const totalReturnOnInvestment = type !== 'percentage'
-        ? value : (value / 100) * amountInvested;
+      delete req.body.id;
       const [rowsUpdated, investment] = await Investment.update({
         ...req.body,
         expectedReturnPercentage
@@ -187,6 +187,7 @@ export default class UserController {
         plain: true,
         raw: true,
       });
+
       const overview = await UserController.calculateInvestmentOverview(req);
       const editedInvestment = { ...investment };
       delete editedInvestment.updatedAt;
@@ -195,7 +196,7 @@ export default class UserController {
         data: {
           message: 'record updated successfully',
           overview,
-          investment: { ...editedInvestment, totalReturnOnInvestment }
+          investment: { ...editedInvestment, }
         },
         res,
         status: 200
@@ -211,9 +212,11 @@ export default class UserController {
       const investment = await userInvestment.getInvestment();
       await userInvestment.destroy();
       await investment.destroy();
+      const overview = await UserController.calculateInvestmentOverview(req);
       return responseMessage({
         data: {
-          message: `investment "${investment.name}" deleted successfully`
+          message: `investment "${investment.name}" deleted successfully`,
+          overview
         },
         res,
         status: 200

@@ -17,7 +17,7 @@ export default {
     },
     expectedReturnPercentage: {
       allowNull: false,
-      type: Sequelize.INTEGER,
+      type: Sequelize.STRING,
     },
     returnDate: {
       allowNull: false,
